@@ -1,24 +1,28 @@
-import logo from './logo.svg';
-import './App.css';
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { collection, doc, getDocs, getFirestore, query, where } from "firebase/firestore";
+import { useState } from "react";
+import Home from "./Home";
+import Login from "./Login";
 
-function App() {
+function App({ firebaseApp }) {
+
+  const [login, setLogin] = useState(true);
+  const [userRef, setUserRef] = useState();
+
+  onAuthStateChanged(getAuth(), async (user) => {
+    if(user) {
+      setLogin(false)
+      const qRes = await getDocs(query(collection(getFirestore(), 'users'), where("email", "==", user.email)));
+      setUserRef(doc(getFirestore(), 'users', qRes.docs[0].id))
+    } else {
+      setLogin(true)
+    }
+  })
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    login
+    ? <Login firebaseApp={firebaseApp} setUserRef={setUserRef} />
+    : <Home userRef={userRef} />
   );
 }
 
